@@ -142,6 +142,12 @@ export function reducer(state, action) {
           ...state.dailyLog,
           [tomorrowDay]: { ...tomorrowLog, rolledOverTasks: rolledOver, date: today },
         },
+        guiltState: {
+          date: today,
+          snoozeCount: 0,
+          shownMessageIndices: [],
+          snoozeUntil: null,
+        },
       }
     }
 
@@ -200,11 +206,95 @@ export function reducer(state, action) {
       }
     }
 
-    case ACTIONS.SHOW_GUILT:
-      return state
+    case ACTIONS.SHOW_GUILT: {
+      const today = new Date().toISOString().slice(0, 10)
+      const prevGuilt = state.guiltState || { date: null, snoozeCount: 0, shownMessageIndices: [] }
+      // Reset daily tracking if it's a new day
+      const resetGuilt = prevGuilt.date !== today
+        ? { date: today, snoozeCount: 0, shownMessageIndices: [] }
+        : prevGuilt
+      return {
+        ...state,
+        programState: { ...state.programState, currentScreen: 'GUILT' },
+        guiltState: resetGuilt,
+      }
+    }
 
-    case ACTIONS.GIVE_UP_TODAY:
-      return state
+    case ACTIONS.SNOOZE_GUILT: {
+      const snoozeUntil = Date.now() + 30 * 60 * 1000
+      const shownIndices = state.guiltState?.shownMessageIndices || []
+      const updatedIndices = action.shownKey && !shownIndices.includes(action.shownKey)
+        ? [...shownIndices, action.shownKey]
+        : shownIndices
+      return {
+        ...state,
+        programState: { ...state.programState, currentScreen: 'DASHBOARD' },
+        guiltState: {
+          ...state.guiltState,
+          snoozeCount: (state.guiltState?.snoozeCount || 0) + 1,
+          snoozeUntil,
+          shownMessageIndices: updatedIndices,
+        },
+      }
+    }
+
+    case ACTIONS.RECORD_GUILT_MESSAGE: {
+      const shownIndices = state.guiltState?.shownMessageIndices || []
+      const updatedIndices = action.shownKey && !shownIndices.includes(action.shownKey)
+        ? [...shownIndices, action.shownKey]
+        : shownIndices
+      return {
+        ...state,
+        guiltState: {
+          ...state.guiltState,
+          shownMessageIndices: updatedIndices,
+        },
+      }
+    }
+
+    case ACTIONS.GIVE_UP_TODAY: {
+      const { currentDay } = state.programState
+      const today = state.dailyLog[currentDay] || {
+        questCompletions: {},
+        xpEarned: 0,
+        rolledOverTasks: [],
+        wasGiveUp: false,
+      }
+
+      const completions = today.questCompletions || {}
+      const rolledOver = []
+      if (!completions.wakeTime) rolledOver.push('wake')
+      if (!completions.water) rolledOver.push('water')
+      if (!completions.cardio || completions.cardio.sessions === 0) rolledOver.push('cardio')
+      if (!completions.training || completions.training.sessions === 0) rolledOver.push('training')
+      if (!completions.reading) rolledOver.push('reading')
+      if (completions.screenTime === undefined) rolledOver.push('screenTime')
+
+      const tomorrowDay = currentDay + 1
+      const tomorrowLog = state.dailyLog[tomorrowDay] || {
+        questCompletions: {},
+        xpEarned: 0,
+        wasGiveUp: false,
+      }
+
+      return {
+        ...state,
+        programState: {
+          ...state.programState,
+          currentScreen: 'DASHBOARD',
+          consecutiveFailureDays: state.programState.consecutiveFailureDays + 1,
+        },
+        guiltState: {
+          ...state.guiltState,
+          snoozeCount: (state.guiltState?.snoozeCount || 0) + 1,
+        },
+        dailyLog: {
+          ...state.dailyLog,
+          [currentDay]: { ...today, wasGiveUp: true },
+          [tomorrowDay]: { ...tomorrowLog, rolledOverTasks: rolledOver },
+        },
+      }
+    }
 
     case ACTIONS.ABANDON_PROGRAM:
       return state
