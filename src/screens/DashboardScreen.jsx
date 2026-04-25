@@ -1,8 +1,12 @@
+import { useState, useEffect } from 'react'
 import { useAppContext } from '@/store/AppContext'
 import { ACTIONS } from '@/store/actions'
 import { getLevel, getXPToNextLevel } from '@/logic/xp'
+import { getQuestCards } from '@/logic/questStatus'
 import XPLevelBar from '@/components/XPLevelBar'
 import StreakIndicator from '@/components/StreakIndicator'
+import QuestCard from '@/components/QuestCard'
+import EvidenceStrip from '@/components/EvidenceStrip'
 
 export default function DashboardScreen() {
   const { state, dispatch } = useAppContext()
@@ -15,6 +19,16 @@ export default function DashboardScreen() {
 
   const currentLevel = getLevel(totalXP)
   const xpToNextLevel = getXPToNextLevel(totalXP)
+
+  // Force re-render every 60 seconds so status chips update based on time
+  const [, setTick] = useState(Date.now())
+  useEffect(() => {
+    const id = setInterval(() => setTick(Date.now()), 60000)
+    return () => clearInterval(id)
+  }, [])
+
+  const todayLog = state.dailyLog[currentDay] || {}
+  const questCards = getQuestCards(state.userProfile, todayLog, new Date())
 
   function handleSettings() {
     dispatch({ type: ACTIONS.NAVIGATE, screen: 'SETTINGS' })
@@ -110,13 +124,17 @@ export default function DashboardScreen() {
           padding: '24px 20px',
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
         }}
       >
-        <p style={{ color: '#888', fontSize: 14, textAlign: 'center', margin: 0 }}>
-          Quest cards loading...
-        </p>
+        {questCards.map(card => (
+          <QuestCard
+            key={card.questType}
+            questType={card.questType}
+            questData={card}
+            dispatch={dispatch}
+          />
+        ))}
+        <EvidenceStrip />
       </main>
     </div>
   )
