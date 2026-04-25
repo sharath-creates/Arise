@@ -10,7 +10,7 @@
  * @returns {boolean}
  */
 export function shouldTransition(storedDate) {
-  if (storedDate == null) return true
+  if (storedDate == null) return false
   const today = new Date().toISOString().slice(0, 10)
   return storedDate !== today
 }

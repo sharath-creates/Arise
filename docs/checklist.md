@@ -70,7 +70,7 @@
   Acceptance: From prd.md — settings shows target editors on first visit; after saving, target editors are gone permanently; "Give Up on Program" shows confirmation with System message; confirming abandons program and returns to threshold; rollback is announced on next open after 3 consecutive failures.
   Verify: Navigate to settings → modify wake time → save → confirm settings no longer shows editors on re-open. Simulate 3 consecutive failures by setting `consecutiveFailureDays: 3` in localStorage → trigger midnight check → confirm rollback message appears on DayTransitionScreen.
 
-- [ ] **11. PWA + Vercel deploy**
+- [x] **11. PWA + Vercel deploy**
   Spec ref: `spec.md > Runtime & Deployment`
   What to build: Replace placeholder PWA icons with real 192×192 and 512×512 pixel icons (dark background, "A" or Arise mark, matches app aesthetic). Finalize `public/manifest.json` — name: "Arise", short_name: "Arise", display: "standalone", start_url: "/", background_color matching dark palette, theme_color matching accent. Initialize git in the project root: `git init`, add `.gitignore` (node_modules, dist, .env), stage all files, commit with message "Initial commit: Arise scaffold". Add remote: `git remote add origin https://github.com/MeSharath/Arise.git`. Push: `git push -u origin main`. Connect Vercel to the GitHub repo (Sharath does this in the Vercel dashboard — agent provides the steps). Confirm auto-deploy triggers on push and live URL is accessible. Test "Add to Home Screen" on phone — confirm app launches full-screen with no browser chrome.
   Acceptance: From spec — Vercel URL is live, app loads correctly on mobile browser, "Add to Home Screen" installs the PWA, PWA launches in standalone mode.
