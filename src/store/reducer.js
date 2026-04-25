@@ -48,8 +48,26 @@ export function reducer(state, action) {
         programState: { ...state.programState, currentScreen: 'PLAN_CONFIRMATION' },
       }
 
-    case ACTIONS.START_PROGRAM:
-      return state
+    case ACTIONS.START_PROGRAM: {
+      const today = new Date().toISOString().slice(0, 10)
+      return {
+        ...state,
+        programState: {
+          ...state.programState,
+          currentScreen: 'DASHBOARD',
+          currentDay: 1,
+          programStartDate: today,
+          lastOpenDate: today,
+          totalXP: 0,
+          stats: { wisdom: 0, confidence: 0, strength: 0, discipline: 0, focus: 0 },
+          streakDays: 1,
+          consecutiveFailureDays: 0,
+          lockedMilestones: [],
+          programStatus: 'active',
+          settingsUsed: false,
+        },
+      }
+    }
 
     case ACTIONS.ADVANCE_DAY:
       return state
