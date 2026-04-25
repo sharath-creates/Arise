@@ -1,6 +1,10 @@
 import './index.css'
+import { AppContextProvider, useAppContext } from './store/AppContext'
 
-function App() {
+function AppContent() {
+  const { state } = useAppContext()
+  const currentScreen = state.programState.currentScreen
+
   return (
     <div
       style={{
@@ -36,7 +40,18 @@ function App() {
       >
         66-DAY PROTOCOL
       </p>
+      <div style={{ color: '#404040', fontSize: '0.75rem', marginTop: '8px', fontFamily: 'system-ui, sans-serif' }}>
+        Screen: {currentScreen}
+      </div>
     </div>
+  )
+}
+
+function App() {
+  return (
+    <AppContextProvider>
+      <AppContent />
+    </AppContextProvider>
   )
 }
 
