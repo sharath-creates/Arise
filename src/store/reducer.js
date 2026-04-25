@@ -1,4 +1,5 @@
 import { ACTIONS } from './actions'
+import { checkRollback } from '@/logic/rollback'
 
 export const initialState = {
   userProfile: null,
@@ -69,8 +70,80 @@ export function reducer(state, action) {
       }
     }
 
-    case ACTIONS.ADVANCE_DAY:
-      return state
+    case ACTIONS.ADVANCE_DAY: {
+      const { currentDay, consecutiveFailureDays, totalXP, stats, streakDays } = state.programState
+      const todayLog = state.dailyLog[currentDay] || {}
+      const today = new Date().toISOString().slice(0, 10)
+
+      // Determine if today was a failure:
+      // "Failure" = wasGiveUp OR xpEarned === 0 (nothing completed)
+      const wasFailure = todayLog.wasGiveUp || (todayLog.xpEarned || 0) === 0
+      const newConsecutiveFailures = wasFailure ? consecutiveFailureDays + 1 : 0
+      const newStreakDays = wasFailure ? 0 : streakDays + 1
+
+      // Collect rolled-over tasks (non-completed quests from today)
+      const completions = todayLog.questCompletions || {}
+      const rolledOver = []
+      if (!completions.wakeTime) rolledOver.push('wake')
+      if (!completions.water) rolledOver.push('water')
+      if (!completions.cardio || completions.cardio.sessions === 0) rolledOver.push('cardio')
+      if (!completions.training || completions.training.sessions === 0) rolledOver.push('training')
+      if (!completions.reading) rolledOver.push('reading')
+      if (completions.screenTime === undefined) rolledOver.push('screenTime')
+
+      // Save weekly snapshot if currentDay % 7 === 0
+      const newSnapshots = { ...state.dailySnapshots }
+      if (currentDay % 7 === 0) {
+        newSnapshots[currentDay] = { totalXP, stats, streakDays, currentDay }
+      }
+
+      // Check rollback
+      const rollbackResult = newConsecutiveFailures >= 3
+        ? checkRollback(
+            { ...state.programState, consecutiveFailureDays: newConsecutiveFailures },
+            newSnapshots
+          )
+        : { shouldRollback: false, targetSnapshot: null }
+
+      const newProgramState = {
+        ...state.programState,
+        currentDay: rollbackResult.shouldRollback && rollbackResult.targetSnapshot
+          ? rollbackResult.targetSnapshot.currentDay
+          : currentDay + 1,
+        totalXP: rollbackResult.shouldRollback && rollbackResult.targetSnapshot
+          ? rollbackResult.targetSnapshot.totalXP
+          : totalXP,
+        stats: rollbackResult.shouldRollback && rollbackResult.targetSnapshot
+          ? rollbackResult.targetSnapshot.stats
+          : stats,
+        streakDays: newStreakDays,
+        consecutiveFailureDays: rollbackResult.shouldRollback ? 0 : newConsecutiveFailures,
+        lastOpenDate: today,
+        currentScreen: 'DAY_TRANSITION',
+        rollbackApplied: rollbackResult.shouldRollback,
+        rollbackFromDay: rollbackResult.shouldRollback && rollbackResult.targetSnapshot
+          ? rollbackResult.targetSnapshot.currentDay
+          : null,
+      }
+
+      // Set up tomorrow's rolledOverTasks
+      const tomorrowDay = newProgramState.currentDay
+      const tomorrowLog = state.dailyLog[tomorrowDay] || {
+        questCompletions: {},
+        xpEarned: 0,
+        wasGiveUp: false,
+      }
+
+      return {
+        ...state,
+        programState: newProgramState,
+        dailySnapshots: newSnapshots,
+        dailyLog: {
+          ...state.dailyLog,
+          [tomorrowDay]: { ...tomorrowLog, rolledOverTasks: rolledOver, date: today },
+        },
+      }
+    }
 
     case ACTIONS.LOG_QUEST_COMPLETION: {
       const { questType, value } = action
@@ -138,6 +211,15 @@ export function reducer(state, action) {
 
     case ACTIONS.SAVE_SETTINGS:
       return state
+
+    case ACTIONS.LOCK_MILESTONE:
+      return {
+        ...state,
+        programState: {
+          ...state.programState,
+          lockedMilestones: [...state.programState.lockedMilestones, action.day],
+        },
+      }
 
     default:
       return state

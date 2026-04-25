@@ -1,15 +1,20 @@
 import './index.css'
 import { AppContextProvider, useAppContext } from './store/AppContext'
+import { useMidnightCheck } from './hooks/useMidnightCheck'
 import ThresholdScreen from './screens/ThresholdScreen'
 import OnboardingScreen from './screens/OnboardingScreen'
 import PlanConfirmationScreen from './screens/PlanConfirmationScreen'
 import CommitmentScreen from './screens/CommitmentScreen'
 import DashboardScreen from './screens/DashboardScreen'
 import SettingsScreen from './screens/SettingsScreen'
+import DayTransitionScreen from './screens/DayTransitionScreen'
+import MilestoneScreen from './screens/MilestoneScreen'
 
 function AppContent() {
-  const { state } = useAppContext()
+  const { state, dispatch } = useAppContext()
   const currentScreen = state.programState.currentScreen
+
+  useMidnightCheck(state.programState, dispatch)
 
   if (currentScreen === 'THRESHOLD') return <ThresholdScreen />
   if (currentScreen === 'ONBOARDING') return <OnboardingScreen />
@@ -17,6 +22,8 @@ function AppContent() {
   if (currentScreen === 'COMMITMENT') return <CommitmentScreen />
   if (currentScreen === 'DASHBOARD') return <DashboardScreen />
   if (currentScreen === 'SETTINGS') return <SettingsScreen />
+  if (currentScreen === 'DAY_TRANSITION') return <DayTransitionScreen />
+  if (currentScreen === 'MILESTONE') return <MilestoneScreen />
 
   return (
     <div
