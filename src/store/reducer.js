@@ -171,8 +171,11 @@ export function reducer(state, action) {
         screenTime: { wisdom: 2, focus: 2 },
       }
 
-      const xpGain    = action.completed ? (XP_GAINS[questType] || 0) : 0
-      const statGains = action.completed ? (STAT_GAINS[questType] || {}) : {}
+      // Idempotency guard: never award XP for a quest that already has XP recorded
+      const xpAwardedFor = today.xpAwardedFor || {}
+      const alreadyAwarded = xpAwardedFor[questType] === true
+      const xpGain    = (action.completed && !alreadyAwarded) ? (XP_GAINS[questType] || 0) : 0
+      const statGains = (action.completed && !alreadyAwarded) ? (STAT_GAINS[questType] || {}) : {}
 
       const updatedCompletions = { ...today.questCompletions }
 
@@ -201,6 +204,9 @@ export function reducer(state, action) {
             ...today,
             questCompletions: updatedCompletions,
             xpEarned: today.xpEarned + xpGain,
+            xpAwardedFor: action.completed
+              ? { ...xpAwardedFor, [questType]: true }
+              : xpAwardedFor,
           },
         },
       }

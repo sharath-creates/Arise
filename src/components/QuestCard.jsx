@@ -46,23 +46,11 @@ function WaterCTA({ questData, dispatch, userProfile }) {
   const [current, setCurrent] = useState(initial)
   const target = userProfile?.dailyWaterTarget || 2
 
-  // Dispatch once we hit target
-  useEffect(() => {
-    if (current >= target) {
-      dispatch({
-        type: ACTIONS.LOG_QUEST_COMPLETION,
-        questType: 'water',
-        value: current,
-        completed: true,
-      })
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [current])
-
   if (questData.status === 'Done') {
+    const displayVal = typeof questData.completionData === 'number' ? questData.completionData : target
     return (
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-        <CompletedBadge label={`${current.toFixed(1)}L completed ✓`} />
+        <CompletedBadge label={`${displayVal.toFixed(1)}L completed ✓`} />
       </div>
     )
   }
@@ -76,16 +64,12 @@ function WaterCTA({ questData, dispatch, userProfile }) {
         onClick={() => {
           const next = parseFloat((current + 0.5).toFixed(1))
           setCurrent(next)
-          // Log incremental progress (non-completing)
-          if (next < target) {
-            dispatch({
-              type: ACTIONS.LOG_QUEST_COMPLETION,
-              questType: 'water',
-              value: next,
-              completed: false,
-            })
-          }
-          // completing case handled by useEffect above
+          dispatch({
+            type: ACTIONS.LOG_QUEST_COMPLETION,
+            questType: 'water',
+            value: next,
+            completed: next >= target,
+          })
         }}
       >
         + 0.5L
