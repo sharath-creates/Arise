@@ -303,10 +303,23 @@ export function reducer(state, action) {
     }
 
     case ACTIONS.ABANDON_PROGRAM:
-      return state
+      return {
+        ...initialState,
+        programState: { ...initialState.programState, currentScreen: 'THRESHOLD' },
+      }
 
     case ACTIONS.SAVE_SETTINGS:
-      return state
+      return {
+        ...state,
+        userProfile: { ...state.userProfile, ...action.updates },
+        programState: { ...state.programState, settingsUsed: true },
+      }
+
+    case ACTIONS.CLEAR_ROLLBACK:
+      return {
+        ...state,
+        programState: { ...state.programState, rollbackApplied: false, rollbackFromDay: null },
+      }
 
     case ACTIONS.LOCK_MILESTONE:
       return {

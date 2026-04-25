@@ -17,6 +17,10 @@ export default function DayTransitionScreen() {
     const isMilestone = MILESTONE_DAYS.includes(currentDay)
     const alreadyLocked = lockedMilestones.includes(currentDay)
 
+    if (rollbackApplied) {
+      dispatch({ type: ACTIONS.CLEAR_ROLLBACK })
+    }
+
     if (isMilestone && !alreadyLocked) {
       dispatch({ type: ACTIONS.NAVIGATE, screen: 'MILESTONE' })
     } else {
@@ -25,22 +29,6 @@ export default function DayTransitionScreen() {
   }
 
   function renderContent() {
-    if (rollbackApplied) {
-      return (
-        <>
-          <SystemMessage
-            message="I'm disappointed in you."
-            tone="disappointment"
-          />
-          <p style={{ color: '#f0f0f0', marginTop: 16, fontSize: 16, lineHeight: 1.6 }}>
-            Three consecutive failures. Your progress has been rolled back to Day{' '}
-            <span style={{ color: '#c9a84c', fontWeight: 700 }}>{rollbackFromDay}</span>.
-            That's where you earned it. Start over from there.
-          </p>
-        </>
-      )
-    }
-
     if ((prevLog.xpEarned || 0) > 0) {
       return (
         <>
@@ -148,6 +136,15 @@ export default function DayTransitionScreen() {
         >
           Day {currentDay} Begins
         </div>
+
+        {rollbackApplied && (
+          <>
+            <SystemMessage message="I'm disappointed in you." tone="disappointment" />
+            <p style={{ color: '#888', margin: '12px 0' }}>
+              Your progress has been rolled back to Day {rollbackFromDay}.
+            </p>
+          </>
+        )}
 
         {renderContent()}
 
