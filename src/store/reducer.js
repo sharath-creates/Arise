@@ -42,7 +42,11 @@ export function reducer(state, action) {
       }
 
     case ACTIONS.COMPLETE_ONBOARDING:
-      return state
+      return {
+        ...state,
+        userProfile: action.userProfile,
+        programState: { ...state.programState, currentScreen: 'PLAN_CONFIRMATION' },
+      }
 
     case ACTIONS.START_PROGRAM:
       return state
