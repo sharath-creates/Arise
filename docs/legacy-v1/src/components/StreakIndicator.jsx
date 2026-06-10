@@ -34,18 +34,14 @@ export default function StreakIndicator({
   return (
     <span
       style={{
-        display: 'inline-block',
-        color: '#c9a84c',
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        color: '#e0c068',
         fontSize: 12,
-        fontWeight: 600,
-        backgroundColor: 'rgba(201, 168, 76, 0.1)',
-        border: '1px solid rgba(201, 168, 76, 0.3)',
+        fontWeight: 700,
+        background:
+          'linear-gradient(135deg, rgba(201,168,76,0.16), rgba(201,168,76,0.06))',
+        border: '1px solid rgba(201, 168, 76, 0.35)',
         borderRadius: 20,
-        padding: '3px 10px',
-        letterSpacing: '0.02em',
-      }}
-    >
-      {copy}
-    </span>
-  )
-}
+        pad

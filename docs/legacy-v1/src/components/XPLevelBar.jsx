@@ -1,6 +1,6 @@
 /**
  * XPLevelBar — shows current level, XP fraction within that level, and an
- * animated progress bar.
+ * animated progress bar with a shimmer sweep.
  *
  * Props:
  *   currentXP      {number}  total accumulated XP
@@ -21,44 +21,37 @@ export default function XPLevelBar({ currentXP = 0, currentLevel = 1 }) {
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: 6,
+          marginBottom: 7,
         }}
       >
         <span
           style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
             color: '#00d4ff',
-            fontWeight: 700,
-            fontSize: 13,
-            letterSpacing: '0.05em',
+            fontWeight: 800,
+            fontSize: 12,
+            letterSpacing: '0.1em',
+            textShadow: '0 0 12px rgba(0,212,255,0.45)',
           }}
         >
+          <span
+            style={{
+              width: 7,
+              height: 7,
+              borderRadius: '50%',
+              background: '#00d4ff',
+              boxShadow: '0 0 8px rgba(0,212,255,0.8)',
+            }}
+          />
           LVL {currentLevel}
         </span>
-        <span style={{ color: '#888', fontSize: 12 }}>
-          {xpInLevel} / {XP_PER_LEVEL} XP
-        </span>
-      </div>
-
-      {/* Progress bar */}
-      <div
-        style={{
-          width: '100%',
-          height: 6,
-          backgroundColor: '#222',
-          borderRadius: 3,
-          overflow: 'hidden',
-        }}
-      >
-        <div
+        <span
           style={{
-            height: '100%',
-            width: `${fillPercent}%`,
-            backgroundColor: '#00d4ff',
-            borderRadius: 3,
-            transition: 'width 0.6s ease',
+            color: '#8a8a92',
+            fontSize: 12,
+            fontVariantNumeric: 'tabular-nums',
           }}
-        />
-      </div>
-    </div>
-  )
-}
+        >
+          <span style={{ color: '#

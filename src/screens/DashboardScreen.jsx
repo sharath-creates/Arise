@@ -1,140 +1,88 @@
-import { useState, useEffect } from 'react'
+import HunterHUD from '@/components/HunterHUD'
+import QuestBoard from '@/components/QuestBoard'
+import SideQuestPanel from '@/components/SideQuestPanel'
+import StatsPanel from '@/components/StatsPanel'
 import { useAppContext } from '@/store/AppContext'
-import { ACTIONS } from '@/store/actions'
-import { getLevel, getXPToNextLevel } from '@/logic/xp'
-import { getQuestCards } from '@/logic/questStatus'
-import XPLevelBar from '@/components/XPLevelBar'
-import StreakIndicator from '@/components/StreakIndicator'
-import QuestCard from '@/components/QuestCard'
-import EvidenceStrip from '@/components/EvidenceStrip'
+import { getPoints, TARGET_POINTS } from '@/data/sideQuests'
+import { countMandatoryDone } from '@/logic/day'
+import { MANDATORY_IDS } from '@/data/quests'
 
-export default function DashboardScreen() {
-  const { state, dispatch } = useAppContext()
-  const {
-    currentDay,
-    totalXP,
-    streakDays,
-    lockedMilestones,
-  } = state.programState
+function EvidenceStrip() {
+  const { state } = useAppContext()
+  const { program, dailyLog } = state
+  const today = dailyLog[program.currentDay] || {}
 
-  const currentLevel = getLevel(totalXP)
-  const xpToNextLevel = getXPToNextLevel(totalXP)
+  const daysElapsed = Math.max(1, program.currentDay - 1)
+  const clearedDays = Object.entries(dailyLog).filter(
+    ([d, log]) =>
+      Number(d) < program.currentDay &&
+      countMandatoryDone(log) === MANDATORY_IDS.length &&
+      !log.surrendered
+  ).length
+  const consistency = Math.round((clearedDays / daysElapsed) * 100)
 
-  // Force re-render every 60 seconds so status chips update based on time
-  const [, setTick] = useState(Date.now())
-  useEffect(() => {
-    const id = setInterval(() => setTick(Date.now()), 60000)
-    return () => clearInterval(id)
-  }, [])
-
-  const todayLog = state.dailyLog[currentDay] || {}
-  const questCards = getQuestCards(state.userProfile, todayLog, new Date())
-
-  function handleSettings() {
-    dispatch({ type: ACTIONS.NAVIGATE, screen: 'SETTINGS' })
-  }
+  const cols = [
+    { label: 'XP TODAY', value: `${today.xpEarned || 0}` },
+    { label: 'POINTS TODAY', value: `${getPoints(today.sideLog || {})} / ${TARGET_POINTS}` },
+    {
+      label: 'CLEAR RATE',
+      value: program.currentDay === 1 ? '—' : `${consistency}%`,
+    },
+  ]
 
   return (
     <div
-      style={{
-        minHeight: '100vh',
-        backgroundColor: '#0a0a0a',
-        color: '#f0f0f0',
-        display: 'flex',
-        flexDirection: 'column',
-      }}
+      className="sys-window"
+      style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, padding: '14px 18px' }}
     >
-      {/* ── Header ── */}
-      <header
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: 10,
-          backgroundColor: '#0a0a0a',
-          borderBottom: '1px solid #1a1a1a',
-          padding: '16px 20px 14px',
-        }}
-      >
-        {/* Top row: day title + gear */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            marginBottom: 8,
-          }}
-        >
-          <h1
-            style={{
-              margin: 0,
-              fontSize: 26,
-              fontWeight: 800,
-              color: '#f0f0f0',
-              lineHeight: 1.1,
-            }}
-          >
-            Day {currentDay}{' '}
-            <span style={{ color: '#888', fontWeight: 400, fontSize: 20 }}>
-              of 66
-            </span>
-          </h1>
-
-          <button
-            onClick={handleSettings}
-            aria-label="Open settings"
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '4px 6px',
-              borderRadius: 6,
-              fontSize: 20,
-              lineHeight: 1,
-              color: '#aaa',
-              transition: 'color 0.2s ease',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#f0f0f0')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = '#aaa')}
-          >
-            ⚙️
-          </button>
+      {cols.map(c => (
+        <div key={c.label}>
+          <div className="label" style={{ fontSize: 9, marginBottom: 4 }}>{c.label}</div>
+          <div className="mono" style={{ fontSize: 16, color: 'var(--text)' }}>{c.value}</div>
         </div>
+      ))}
+    </div>
+  )
+}
 
-        {/* Streak badge */}
-        <div style={{ marginBottom: 12 }}>
-          <StreakIndicator
-            streakDays={streakDays}
-            lockedMilestones={lockedMilestones}
-            currentDay={currentDay}
-          />
-        </div>
+export default function DashboardScreen() {
+  const { state } = useAppContext()
+  const { program, dailyLog } = state
+  const today = dailyLog[program.currentDay] || {}
 
-        {/* XP bar */}
-        <XPLevelBar
-          currentXP={totalXP}
-          currentLevel={currentLevel}
-          xpToNextLevel={xpToNextLevel}
-        />
-      </header>
+  return (
+    <div style={{ minHeight: '100vh', position: 'relative', zIndex: 1 }}>
+      <HunterHUD />
 
-      {/* ── Body ── */}
       <main
         style={{
-          flex: 1,
-          padding: '24px 20px',
+          maxWidth: 760,
+          margin: '0 auto',
+          padding: '20px 20px 40px',
           display: 'flex',
           flexDirection: 'column',
+          gap: 16,
         }}
       >
-        {questCards.map(card => (
-          <QuestCard
-            key={card.questType}
-            questType={card.questType}
-            questData={card}
-            dispatch={dispatch}
-          />
-        ))}
+        {today.surrendered ? (
+          <div
+            className="sys-window red"
+            style={{ padding: '12px 18px', textAlign: 'center' }}
+          >
+            <span className="label" style={{ color: 'var(--red)' }}>
+              YOU SURRENDERED THIS DAY. THE PENALTY ARRIVES AT MIDNIGHT.
+            </span>
+          </div>
+        ) : null}
+
+        <QuestBoard />
+        <SideQuestPanel />
+        <StatsPanel />
         <EvidenceStrip />
+
+        <div style={{ textAlign: 'center', fontSize: 11, color: 'var(--text-mute)', marginTop: 4 }}>
+          The System is always watching. 〔 監視中 〕
+        </div>
       </main>
     </div>
   )

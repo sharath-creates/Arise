@@ -1,56 +1,57 @@
 /**
- * XP calculation utilities — pure functions, no React imports.
+ * XP, levels, ranks.
+ *
+ * Level curve: XP required to advance FROM level L is 300 + (L-1)*75.
+ * L1->L2: 300, L2->L3: 375, L3->L4: 450, ...
  */
 
-/**
- * Sums xpEarned across all day entries in the dailyLog object.
- * @param {Object} dailyLog - keyed by day number, each value has an xpEarned field
- * @returns {number}
- */
-export function getTotalXP(dailyLog) {
-  if (!dailyLog || typeof dailyLog !== 'object') return 0
-  return Object.values(dailyLog).reduce((sum, entry) => {
-    return sum + (typeof entry?.xpEarned === 'number' ? entry.xpEarned : 0)
-  }, 0)
+export const RANKS = [
+  { id: 'E', minLevel: 1,  color: '#8a8a92', glow: 'rgba(138,138,146,0.35)' },
+  { id: 'D', minLevel: 6,  color: '#4ade80', glow: 'rgba(74,222,128,0.35)' },
+  { id: 'C', minLevel: 13, color: '#00d4ff', glow: 'rgba(0,212,255,0.35)' },
+  { id: 'B', minLevel: 21, color: '#b14aff', glow: 'rgba(177,74,255,0.35)' },
+  { id: 'A', minLevel: 30, color: '#ff4a6e', glow: 'rgba(255,74,110,0.35)' },
+  { id: 'S', minLevel: 40, color: '#ffd76a', glow: 'rgba(255,215,106,0.45)' },
+]
+
+export function xpToAdvanceFrom(level) {
+  return 300 + (level - 1) * 75
 }
 
-/**
- * Sums xpEarned for days in the range [currentDay-6, currentDay] (7-day window).
- * @param {Object} dailyLog
- * @param {number} currentDay
- * @returns {number}
- */
-export function getWeeklyXP(dailyLog, currentDay) {
-  if (!dailyLog || typeof dailyLog !== 'object') return 0
-  const startDay = currentDay - 6
-  return Object.entries(dailyLog).reduce((sum, [key, entry]) => {
-    const day = Number(key)
-    if (day >= startDay && day <= currentDay) {
-      return sum + (typeof entry?.xpEarned === 'number' ? entry.xpEarned : 0)
-    }
-    return sum
-  }, 0)
+/** { level, intoLevel, needed } for a total XP amount. */
+export function getLevelInfo(totalXP) {
+  let level = 1
+  let rest = Math.max(0, totalXP)
+  // Hard cap iterations; XP totals in this program can't exceed ~level 200.
+  while (level < 500) {
+    const need = xpToAdvanceFrom(level)
+    if (rest < need) return { level, intoLevel: rest, needed: need }
+    rest -= need
+    level += 1
+  }
+  return { level, intoLevel: 0, needed: xpToAdvanceFrom(level) }
 }
 
-/**
- * Returns the player's level based on total XP.
- * Level = floor(totalXP / 400) + 1
- * getLevel(0)   === 1
- * getLevel(400) === 2
- * @param {number} totalXP
- * @returns {number}
- */
 export function getLevel(totalXP) {
-  if (typeof totalXP !== 'number' || totalXP < 0) return 1
-  return Math.floor(totalXP / 400) + 1
+  return getLevelInfo(totalXP).level
 }
 
-/**
- * Returns XP needed to reach the next level.
- * @param {number} totalXP
- * @returns {number}
- */
-export function getXPToNextLevel(totalXP) {
-  if (typeof totalXP !== 'number' || totalXP < 0) return 400
-  return 400 - (totalXP % 400)
+export function getRank(level) {
+  let rank = RANKS[0]
+  for (const r of RANKS) {
+    if (level >= r.minLevel) rank = r
+  }
+  return rank
+}
+
+export function getRankForXP(totalXP) {
+  return getRank(getLevel(totalXP))
+}
+
+/** Next rank threshold, or null at S. */
+export function getNextRank(level) {
+  for (const r of RANKS) {
+    if (r.minLevel > level) return r
+  }
+  return null
 }

@@ -303,20 +303,7 @@ function ScreenTimeCTA({ questData, dispatch, userProfile }) {
 // ─── Shared UI primitives ─────────────────────────────────────────────────────
 function CTAButton({ onClick, children }) {
   return (
-    <button
-      onClick={onClick}
-      style={{
-        backgroundColor: '#00d4ff',
-        color: '#0a0a0a',
-        border: 'none',
-        borderRadius: 8,
-        padding: '8px 16px',
-        fontSize: 13,
-        fontWeight: 700,
-        cursor: 'pointer',
-        whiteSpace: 'nowrap',
-      }}
-    >
+    <button className="cta-btn" onClick={onClick}>
       {children}
     </button>
   )
@@ -324,7 +311,20 @@ function CTAButton({ onClick, children }) {
 
 function CompletedBadge({ label }) {
   return (
-    <span style={{ color: '#22c55e', fontSize: 13, fontWeight: 600 }}>
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        color: '#4ade80',
+        fontSize: 13,
+        fontWeight: 700,
+        background: 'rgba(34,197,94,0.1)',
+        border: '1px solid rgba(34,197,94,0.25)',
+        borderRadius: 8,
+        padding: '5px 12px',
+      }}
+    >
       {label}
     </span>
   )
@@ -358,14 +358,13 @@ export default function QuestCard({ questType, questData, dispatch }) {
 
   return (
     <div
+      className="surface-card fade-up"
       style={{
-        backgroundColor: '#1a1a1a',
-        borderRadius: 12,
-        padding: 16,
+        padding: '16px 18px',
         marginBottom: 12,
-        border: '1px solid #2a2a2a',
         width: '100%',
         boxSizing: 'border-box',
+        borderLeft: `3px solid ${status === 'Pending' ? '#2a2a2e' : statusColor}`,
       }}
     >
       {/* Row 1: icon + title + status chip */}
@@ -377,19 +376,37 @@ export default function QuestCard({ questType, questData, dispatch }) {
           marginBottom: 6,
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 18, lineHeight: 1 }}>{ICONS[questType]}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span
+            style={{
+              fontSize: 17,
+              lineHeight: 1,
+              width: 34,
+              height: 34,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              borderRadius: 10,
+              background: '#222226',
+              border: '1px solid #2c2c31',
+            }}
+          >
+            {ICONS[questType]}
+          </span>
           <span style={{ fontSize: 16, fontWeight: 700, color: '#f0f0f0' }}>{title}</span>
         </div>
         <span
           style={{
-            backgroundColor: statusColor,
-            color: status === 'Pending' ? '#ccc' : '#0a0a0a',
+            backgroundColor:
+              status === 'Pending' ? 'transparent' : statusColor,
+            color: status === 'Pending' ? '#9aa0a6' : '#0a0a0a',
+            border: status === 'Pending' ? '1px solid #3a3a40' : 'none',
             borderRadius: 20,
-            padding: '3px 10px',
+            padding: '3px 11px',
             fontSize: 11,
             fontWeight: 700,
-            letterSpacing: 0.3,
+            letterSpacing: 0.4,
+            textTransform: 'uppercase',
           }}
         >
           {status}
@@ -416,29 +433,4 @@ export default function QuestCard({ questType, questData, dispatch }) {
       <div
         style={{
           display: 'flex',
-          alignItems: 'center',
-          gap: 10,
-          marginBottom: 12,
-          flexWrap: 'wrap',
-        }}
-      >
-        <span
-          style={{
-            fontSize: 12,
-            fontWeight: 700,
-            color: '#c9a84c',
-            backgroundColor: 'rgba(201,168,76,0.1)',
-            padding: '2px 8px',
-            borderRadius: 6,
-          }}
-        >
-          +{xp} XP
-        </span>
-        <span style={{ fontSize: 12, color: '#888' }}>{statGains}</span>
-      </div>
-
-      {/* CTA area */}
-      <div>{renderCTA()}</div>
-    </div>
-  )
-}
+      

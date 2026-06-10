@@ -1,18 +1,27 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react'
-import { reducer } from './reducer'
-import { loadState, writeKey, STORAGE_KEYS } from './localStorage'
+import { createContext, useContext, useEffect, useReducer, useRef } from 'react'
+import { reducer, createInitialState } from './reducer'
+import { loadState, saveState } from './storage'
 
-export const AppContext = createContext(null)
+const AppContext = createContext(null)
 
-export function AppContextProvider({ children }) {
-  const [state, dispatch] = useReducer(reducer, undefined, () => loadState())
+function init() {
+  const saved = loadState()
+  if (!saved) return createInitialState()
+  // Re-attach transient fields that don't persist.
+  return { ...createInitialState(), ...saved, toasts: [] }
+}
 
+export function AppProvider({ children }) {
+  const [state, dispatch] = useReducer(reducer, undefined, init)
+
+  // Persist on change (skip the very first render's redundant write).
+  const first = useRef(true)
   useEffect(() => {
-    writeKey(STORAGE_KEYS.userProfile, state.userProfile)
-    writeKey(STORAGE_KEYS.programState, state.programState)
-    writeKey(STORAGE_KEYS.dailyLog, state.dailyLog)
-    writeKey(STORAGE_KEYS.dailySnapshots, state.dailySnapshots)
-    writeKey(STORAGE_KEYS.guiltState, state.guiltState)
+    if (first.current) {
+      first.current = false
+      return
+    }
+    saveState(state)
   }, [state])
 
   return (
@@ -22,8 +31,9 @@ export function AppContextProvider({ children }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAppContext() {
-  return useContext(AppContext)
+  const ctx = useContext(AppContext)
+  if (!ctx) throw new Error('useAppContext must be used inside AppProvider')
+  return ctx
 }
-
-export default AppContext

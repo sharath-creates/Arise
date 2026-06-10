@@ -1,0 +1,54 @@
+@import "tailwindcss";
+
+@theme {
+  /* Background layers */
+  --color-bg-base: #0a0a0a;
+  --color-bg-surface: #1a1a1a;
+  --color-bg-elevated: #222222;
+  --color-bg-card: #2a2a2a;
+
+  /* Electric cyan accent */
+  --color-accent-cyan: #00d4ff;
+  --color-accent-cyan-dim: #0099bb;
+  --color-accent-cyan-glow: rgba(0, 212, 255, 0.2);
+
+  /* Muted gold for rewards */
+  --color-reward-gold: #c9a84c;
+  --color-reward-gold-dim: #a8883a;
+  --color-reward-gold-glow: rgba(201, 168, 76, 0.2);
+
+  /* Text */
+  --color-text-primary: #f0f0f0;
+  --color-text-secondary: #a0a0a0;
+  --color-text-muted: #606060;
+
+  /* Status colors */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+
+  /* Font family */
+  --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* Base styles */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html, body, #root {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  background-color: #0a0a0a;
+  color: #f0f0f0;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Animations ─────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; trans
